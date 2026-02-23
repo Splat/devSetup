@@ -56,3 +56,7 @@ With these steps, your Vim ha the beasic of features for Go development, includi
 - **GoDoc**: Displays documentation for the identifier under the cursor in a split pane.
 - **GoImport**: Manages package imports.
 - **GoRename**: Renames the identifier under the cursor across all files in the package.
+
+### Debugging
+Install the Delve debugger and just avoid using GDB unless necessary or on someone else's machine/server. 
+`go install github.com/go-delve/delve/cmd/dlv@latest`
