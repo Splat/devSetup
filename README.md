@@ -46,3 +46,13 @@ Run tests: Use `:GoTest` to run tests for the current package.
 Build/Run: Use `:GoBuild` or `:GoRun` to compile and execute your code. 
 
 With these steps, your Vim ha the beasic of features for Go development, including auto-completion, formatting, and debugging support. 
+
+### Quick Command Reference (Golang)
+:GoRun: Executes your current file(s) with go run.
+:GoBuild: Compiles your package with go build.
+:GoTest: Runs tests for the current package.
+:GoCoverageToggle: Toggles the display of test coverage results.
+:GoDef: Jumps to a symbol or function definition (often mapped to gd in modern setups).
+:GoDoc: Displays documentation for the identifier under the cursor in a split pane.
+:GoImport: Manages package imports.
+:GoRename: Renames the identifier under the cursor across all files in the package.
