@@ -17,16 +17,19 @@ Either store in `~/.vimrc` or `~/config/nvim/init.vim`. Been switching to Neovim
 " -------------------------------
 call plug#begin('~/.vim/plugged')
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-" Optional: Add other useful plugins like a file explorer (NERDTree) or a completion engine (coc.nvim)
-Plug 'preservim/nerdtree'
+" Optional: Add other useful plugins
+" Plug 'dense-analysis/ale'         " For linting and formatting
+" Plug 'preservim/nerdtree'         " For a file explorer
 call plug#end()
 
 " -------------------------------
 " Golang settings
 " -------------------------------
-let g:go_fmt_command = "goimports" " Use goimports for formatting and managing imports
-let g:go_gopls_enabled = 1          " Enable gopls, the Go language server
-autocmd BufWritePre *.go :silent! :GoImports " Automatically run goimports on save
+let g:go_fmt_command = "goimports"        " Use goimports for formatting and managing imports on save
+let g:go_def_mode = 'gopls'              " Use gopls for 'go to definition'
+let g:go_info_mode = 'gopls'             " Use gopls for type info
+let g:go_gopls_enabled = 1               " Enable gopls integration
 
-
+" Auto format on save
+autocmd BufWritePre *.go :silent! :GoImports
 ```
