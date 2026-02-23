@@ -33,3 +33,16 @@ let g:go_gopls_enabled = 1               " Enable gopls integration
 " Auto format on save
 autocmd BufWritePre *.go :silent! :GoImports
 ```
+
+### Install Plugins and Go Binaries 
+Install the plugins: Open Vim and run the command `:PlugInstall`.
+Install Go tools: Once the plugins are installed, run `:GoInstallBinaries` or `:GoUpdateBinaries` inside Vim to download and compile all necessary Go tools, including gopls and goimports. 
+ 
+### Verify the Setup
+Open a Go file (e.g., `vim hello.go`) and test some of the features: 
+Go to definition: Place your cursor over a function or type and use the default mapping gd (or run `:GoDef`).
+Show documentation: Hover over a symbol and press `K` (or run `:GoDoc`).
+Run tests: Use `:GoTest` to run tests for the current package.
+Build/Run: Use `:GoBuild` or `:GoRun` to compile and execute your code. 
+
+With these steps, your Vim ha the beasic of features for Go development, including auto-completion, formatting, and debugging support. 
