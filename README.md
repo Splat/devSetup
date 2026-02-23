@@ -58,5 +58,12 @@ With these steps, your Vim ha the beasic of features for Go development, includi
 - **GoRename**: Renames the identifier under the cursor across all files in the package.
 
 ### Debugging
+### Ensure ENV Configured
+ensure the the `GOPATH` and `PATH` are properly configuerd in `~/.bash_profile` and `~/.zshrc`. Delve won't install properly or at all without this. 
+```
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+```
+
 Install the Delve debugger and just avoid using GDB unless necessary or on someone else's machine/server. 
 `go install github.com/go-delve/delve/cmd/dlv@latest`
