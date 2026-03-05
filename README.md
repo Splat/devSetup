@@ -15,7 +15,7 @@ Either store in `~/.vimrc` or `~/config/nvim/init.vim`. Been switching to Neovim
 " -------------------------------
 "  Configure Basic Vim Settings
 "  ------------------------------
-set number relativenumber"
+set number relativenumber
 
 " -------------------------------
 " Plugin section
