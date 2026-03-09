@@ -16,7 +16,7 @@ set tabstop=4
 " -------------------------------
 call plug#begin('~/.vim/plugged')
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-" Optional: Add other useful plugins
+" Optional: Add other useful plugins. Uncomment for usage
 " Plug 'dense-analysis/ale'         " For linting and formatting
 " Plug 'preservim/nerdtree'         " For a file explorer
 call plug#end()
