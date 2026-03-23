@@ -10,6 +10,11 @@ set shiftwidth=4
 set signcolumn=yes
 set smartindent
 set tabstop=4
+" Set all the line break options
+set wrap
+set linebreak
+set breakindent
+set showbreak=>>
 
 " -------------------------------
 " Plugin section
