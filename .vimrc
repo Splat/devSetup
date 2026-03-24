@@ -15,6 +15,8 @@ set wrap
 set linebreak
 set breakindent
 set showbreak=>>
+" start searching as I type
+set incsearch
 
 " -------------------------------
 " Plugin section
