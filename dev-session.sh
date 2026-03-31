@@ -34,7 +34,7 @@ fi
 #
 #  ┌─────────────────────┬────────────────┐
 #  │                     │                │
-#  │    vim / nvim        │  file explorer │
+#  │    vim / nvim       │  file explorer │
 #  │    (main editor)    │  (lf / nnn /   │
 #  │                     │   tree)        │
 #  │                     │                │
@@ -62,7 +62,20 @@ tmux send-keys    -t "$SESSION:editor.left" 'vim .' Enter
 tmux new-window   -t "$SESSION" -n "claude" -c "$ROOT"
 tmux send-keys    -t "$SESSION:claude" 'claude' Enter
 
-# ── Window 3: Shell / go commands ─────────────────────────────────────────────
+# ── Window 3: GH Copilot -─────────────────────────────────────────────────────
+#
+#  ┌─────────────────────────────────────┐
+#  │        copilot (full width)         │
+#  └────────────────────┬────────────────┘
+#  │       copilot      │     suggest    │
+#  └────────────────────┴────────────────┘
+#
+tmux new-window -t "$SESSION" -n "copilot" -c "$ROOT"
+tmux split-window -h -l 50% -t "$SESSION:copilot" -c "$ROOT"
+tmux send-keys -t "$SESSION:copilot.left"  'gh copilot suggest' Enter
+tmux select-pane -t "$SESSION:copilot.left"
+
+# ── Window 4: Shell / go commands ─────────────────────────────────────────────
 #
 #  ┌─────────────────────────────────────┐
 #  │         go build / test / run       │
@@ -81,7 +94,7 @@ tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
 # Focus top pane (main shell for go build/run)
 tmux select-pane  -t "$SESSION:shell.top"
 
-# ── Window 4: Debug ───────────────────────────────────────────────────────────
+# ── Window 5: Debug ───────────────────────────────────────────────────────────
 #
 #  ┌─────────────────────────────────────┐
 #  │         delve / dlv dap             │
