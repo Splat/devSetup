@@ -63,7 +63,7 @@ tmux new-window   -t "$SESSION" -n "claude" -c "$ROOT"
 tmux send-keys    -t "$SESSION:claude" 'claude' Enter
 
 # ── Window 3: GH Copilot -─────────────────────────────────────────────────────
-#
+#  gh extension install github/gh-copilot
 #  ┌─────────────────────────────────────┐
 #  │        copilot (full width)         │
 #  └────────────────────┬────────────────┘
