@@ -70,7 +70,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 
 ```bash
 cp .tmux.conf ~/.tmux.conf
-cp dev-session.sh ~/bin/dev-session   # or anywhere on $PATH
+cp dev-session.sh ~/bin/dev-session   # or anywhere on $PATH: MACOS /usr/local/bin
 chmod +x ~/bin/dev-session
 ```
 
