@@ -84,6 +84,20 @@ tmux
 #   prefix + r
 ```
 
+### 7. Configure `lf` to open files in Vim in left pane
+```bash
+mkdir -p ~/.config/lf
+
+cat > ~/.config/lf/lfrc << 'EOF'
+# open file in the vim pane to the left
+cmd open-in-vim &{{
+    echo "$f" > /tmp/lf-open
+}}
+
+map <enter> open-in-vim
+EOF
+```
+
 ## Daily use
 
 ```bash
