@@ -23,10 +23,19 @@ set incsearch
 " -------------------------------
 call plug#begin('~/.vim/plugged')
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+Plug 'neoclide/coc.nvim', {'branch': 'release'}    " LSP
 " Optional: Add other useful plugins. Uncomment for usage
 " Plug 'dense-analysis/ale'         " For linting and formatting
 " Plug 'preservim/nerdtree'         " For a file explorer
 call plug#end()
+
+" coc keymaps
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gr <Plug>(coc-references)
+nmap <silent> K :call CocActionAsync('doHover')<CR>
+nmap <silent> <leader>rn <Plug>(coc-rename)
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
 " -------------------------------
 " Golang settings
