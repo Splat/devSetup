@@ -62,18 +62,14 @@ tmux send-keys    -t "$SESSION:editor.left" 'vim .' Enter
 tmux new-window   -t "$SESSION" -n "claude" -c "$ROOT"
 tmux send-keys    -t "$SESSION:claude" 'claude' Enter
 
-# ── Window 3: GH Copilot -─────────────────────────────────────────────────────
-#  gh extension install github/gh-copilot
+# ── Window 3: GitHub Copilot CLI ──────────────────────────────────────────────
+#  brew install copilot-cli   (then /login on first run)
 #  ┌─────────────────────────────────────┐
 #  │        copilot (full width)         │
-#  └────────────────────┬────────────────┘
-#  │       copilot      │     suggest    │
-#  └────────────────────┴────────────────┘
+#  └─────────────────────────────────────┘
 #
 tmux new-window -t "$SESSION" -n "copilot" -c "$ROOT"
-tmux split-window -h -l 50% -t "$SESSION:copilot" -c "$ROOT"
-tmux send-keys -t "$SESSION:copilot.left"  'gh copilot suggest' Enter
-tmux select-pane -t "$SESSION:copilot.left"
+tmux send-keys -t "$SESSION:copilot" 'copilot' Enter
 
 # ── Window 4: Shell / go commands ─────────────────────────────────────────────
 #

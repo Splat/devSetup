@@ -19,14 +19,19 @@ Window 2 — claude
 │   claude                                 │
 └──────────────────────────────────────────┘
 
-Window 3 — shell
+Window 3 — copilot
+┌──────────────────────────────────────────┐
+│   copilot                                │
+└──────────────────────────────────────────┘
+
+Window 4 — shell
 ┌──────────────────────────────────────────┐
 │   go build / go run / go generate        │
 ├─────────────────────────┬────────────────┤
 │   go test -v ./...      │   git / misc   │
 └─────────────────────────┴────────────────┘
 
-Window 4 — debug
+Window 5 — debug
 ┌──────────────────────────────────────────┐
 │   dlv debug / dlv test                   │
 ├─────────────────────────┬────────────────┤
@@ -69,13 +74,28 @@ cp lfrc ~/.config/lf/lfrc
 
 Pressing Enter on a file in `lf` will now run `:e <file>` in the left pane instead of opening it in place.
 
-### 4. Install Delve (Go debugger)
+### 4. Install GitHub Copilot CLI
+
+```bash
+brew install copilot-cli
+```
+
+On first launch, authenticate inside the CLI:
+
+```bash
+copilot
+# then type: /login
+```
+
+Requires an active GitHub Copilot subscription. This replaces the deprecated `gh copilot` extension.
+
+### 5. Install Delve (Go debugger)
 
 ```bash
 go install github.com/go-delve/delve/cmd/dlv@latest
 ```
 
-### 5. Copy config files
+### 7. Copy config files
 
 ```bash
 cp .tmux.conf ~/.tmux.conf
@@ -83,7 +103,7 @@ cp dev-session.sh ~/bin/dev-session   # or anywhere on $PATH: MACOS /usr/local/b
 chmod +x ~/bin/dev-session
 ```
 
-### 6. Start tmux and install plugins
+### 8. Start tmux and install plugins
 
 ```bash
 tmux
