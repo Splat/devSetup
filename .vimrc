@@ -48,22 +48,3 @@ let g:go_gopls_enabled = 1            " Enable gopls integration
 " Auto format on save
 autocmd BufWritePre *.go :silent! :GoImports
 
-
-" -------------------------------
-" auto-open file written by lf
-" -------------------------------
-augroup lf_open
-  autocmd!
-  autocmd FocusGained * call s:lf_check()
-augroup END
-
-function! s:lf_check()
-  let l:path = '/tmp/lf-open'
-  if filereadable(l:path) && getftime(l:path) > getftime(expand('%'))
-    let l:file = trim(readfile(l:path)[0])
-    if l:file != '' && filereadable(l:file)
-      execute 'edit ' . fnameescape(l:file)
-      call delete(l:path)
-    endif
-  endif
-endfunction
