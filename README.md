@@ -8,6 +8,9 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 ```
 
+### Install gopls
+`go install golang.org/x/tools/gopls@latest`
+
 ### Configure `.vimrc`
 Either store in `~/.vimrc` or `~/config/nvim/init.vim`. Been switching to Neovim but still prefer the old days. 
 

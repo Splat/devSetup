@@ -79,7 +79,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 
 ```bash
 cp .tmux.conf ~/.tmux.conf
-cp dev-session.sh ~/bin/dev-session   # or anywhere on $PATH
+cp dev-session.sh ~/bin/dev-session   # or anywhere on $PATH: MACOS /usr/local/bin
 chmod +x ~/bin/dev-session
 ```
 
@@ -91,6 +91,20 @@ tmux
 #   prefix + I   (Ctrl-a then Shift-i)
 # Wait for TPM to install tmux-resurrect and tmux-continuum, then reload:
 #   prefix + r
+```
+
+### 7. Configure `lf` to open files in Vim in left pane
+```bash
+mkdir -p ~/.config/lf
+
+cat > ~/.config/lf/lfrc << 'EOF'
+# open file in the vim pane to the left
+cmd open-in-vim &{{
+    echo "$f" > /tmp/lf-open
+}}
+
+map <enter> open-in-vim
+EOF
 ```
 
 ## Daily use
