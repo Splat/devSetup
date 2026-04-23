@@ -57,7 +57,22 @@ sudo apt install tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
 
-### 3. Install a file explorer (pick one)
+### 3. Install Claude Code CLI
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Authenticate on first run:
+
+```bash
+claude
+# follow the login prompt
+```
+
+Window 2 launches `claude` automatically when the session starts.
+
+### 4. Install a file explorer (pick one)
 
 ```bash
 brew install lf      # recommended — fast, vim keybindings
@@ -74,7 +89,7 @@ cp lfrc ~/.config/lf/lfrc
 
 Pressing Enter on a file in `lf` will now run `:e <file>` in the left pane instead of opening it in place.
 
-### 4. Install GitHub Copilot CLI
+### 5. Install GitHub Copilot CLI
 
 ```bash
 brew install copilot-cli
@@ -89,7 +104,7 @@ copilot
 
 Requires an active GitHub Copilot subscription. This replaces the deprecated `gh copilot` extension.
 
-### 5. Install Delve (Go debugger)
+### 6. Install Delve (Go debugger)
 
 ```bash
 go install github.com/go-delve/delve/cmd/dlv@latest
