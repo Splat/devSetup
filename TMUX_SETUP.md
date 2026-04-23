@@ -124,6 +124,9 @@ prefix + Ctrl-r   → restore manually
 ```
 
 ## Key bindings (prefix = Ctrl-a)
+What follows is a list of key bindings. The prefix key is `Ctrl-a` (set in `.tmux.conf`) for my defaults, so for example `prefix + h` means `Ctrl-a then h`. If you adjust the prefix key, just replace `prefix` with your chosen key in the list below.
+
+### Pane navigation
 
 | Keys | Action |
 |------|--------|
@@ -138,6 +141,17 @@ prefix + Ctrl-r   → restore manually
 | `prefix + I` | Install TPM plugins |
 | `prefix + Ctrl-s` | Save session |
 | `prefix + Ctrl-r` | Restore session |
+
+### Window navigation
+
+Windows are numbered from 1. Jump directly by number or cycle with next/prev. The status bar at the bottom also accepts mouse clicks (`mouse on` is set).
+
+| Keys | Action |
+|------|--------|
+| `prefix + n` | Next window |
+| `prefix + p` | Previous window |
+| `prefix + 1`–`5` | Jump directly to window by number |
+| `prefix + w` | Visual window list (navigate with j/k + Enter) |
 
 ## vim integration
 
