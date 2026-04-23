@@ -60,6 +60,15 @@ brew install lf      # recommended — fast, vim keybindings
 brew install nnn
 ```
 
+Then wire `lf` to open files in the vim pane on the left:
+
+```bash
+mkdir -p ~/.config/lf
+cp lfrc ~/.config/lf/lfrc
+```
+
+Pressing Enter on a file in `lf` will now run `:e <file>` in the left pane instead of opening it in place.
+
 ### 4. Install Delve (Go debugger)
 
 ```bash

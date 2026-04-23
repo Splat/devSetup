@@ -1,0 +1,7 @@
+# open file in the vim pane to the left via tmux
+cmd open-in-vim &{{
+    left_pane=$(tmux list-panes -F '#{pane_id}' | grep -v "$TMUX_PANE" | head -1)
+    tmux send-keys -t "$left_pane" ":e $f" Enter
+}}
+
+map <enter> open-in-vim
