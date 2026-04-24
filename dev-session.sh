@@ -83,9 +83,10 @@ tmux new-window   -t "$SESSION" -n "shell" -c "$ROOT"
 tmux split-window -v -l 35% -t "$SESSION:shell" -c "$ROOT"
 tmux split-window -h         -t "$SESSION:shell.bottom" -c "$ROOT"
 
-# Label bottom panes
+# Label bottom panes and launch test runner
 tmux select-pane  -t "$SESSION:shell.bottom-left"  -T "test"
 tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
+tmux send-keys    -t "$SESSION:shell.bottom-left"  'go test -v ./...' Enter
 
 # Focus top pane (main shell for go build/run)
 tmux select-pane  -t "$SESSION:shell.top"
