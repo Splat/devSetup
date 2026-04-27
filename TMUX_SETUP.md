@@ -137,6 +137,9 @@ dev-session ~/code/myproject
 
 # From inside an existing tmux session
 dev-session   # attaches/switches without nesting
+
+# Kill the session entirely and start fresh
+tmux kill-session -t dev && dev-session
 ```
 
 The session is named `dev`. If it already exists the script just attaches — safe to run repeatedly.
