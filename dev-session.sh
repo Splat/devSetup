@@ -12,7 +12,7 @@
 set -euo pipefail
 
 SESSION="dev"
-ROOT="${1:-$HOME/code}"   # override with first arg or set your default here
+ROOT="${1:-$PWD}"   # defaults to current directory; override with first arg
 
 # If already inside tmux, switch; otherwise attach or create
 tmux_cmd() {
