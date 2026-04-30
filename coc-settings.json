@@ -1,0 +1,9 @@
+{
+  "go.goplsOptions": {
+    "completeUnimported": true,
+    "usePlaceholders": true,
+    "staticcheck": true
+  },
+  "go.goplsPath": "gopls",
+  "coc.preferences.formatOnSaveFiletypes": ["go"]
+}
