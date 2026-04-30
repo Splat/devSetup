@@ -44,7 +44,22 @@ autocmd BufWritePre *.go :silent! :GoImports
 
 ### Install Plugins and Go Binaries 
 Install the plugins: Open Vim and run the command `:PlugInstall`.
-Install Go tools: Once the plugins are installed, run `:GoInstallBinaries` or `:GoUpdateBinaries` inside Vim to download and compile all necessary Go tools, including gopls and goimports. 
+Install Go tools: Once the plugins are installed, run `:GoInstallBinaries` or `:GoUpdateBinaries` inside Vim to download and compile all necessary Go tools, including gopls and goimports.
+
+### Install coc-go (LSP + Autocomplete)
+`coc-go` routes Go files to gopls inside coc.nvim, enabling autocomplete, diagnostics, and hover docs. After `:PlugInstall`, run inside Vim:
+```
+:CocInstall coc-go
+```
+
+Copy `coc-settings.json` from this repo to `~/.vim/coc-settings.json` (or `~/.config/nvim/coc-settings.json` for Neovim):
+```
+cp coc-settings.json ~/.vim/coc-settings.json
+```
+
+**Completion keybindings** (already in `.vimrc`):
+- `Tab` / `Shift-Tab` — cycle through suggestions
+- `Enter` — confirm selection
  
 ### Verify the Setup
 Open a Go file (e.g., `vim hello.go`) and test some of the features: 
