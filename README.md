@@ -1,5 +1,32 @@
 # devSetup
-This repo is intended to store easy to find scripts to quickly bootstrap my development environment and methodology.
+This repo stores scripts and configs to quickly bootstrap my development environment.
+
+## Quick Start
+
+Clone the repo and run the install script — it handles Homebrew, tmux, lf, Node, Go tools, vim-plug, and all config symlinks:
+
+```bash
+git clone https://github.com/Splat/devSetup ~/code/devSetup
+cd ~/code/devSetup
+./install.sh
+```
+
+After it completes, follow the printed manual steps (vim plugins + tmux plugins).
+
+### Config symlinks
+
+`install.sh` symlinks configs from the repo rather than copying them, so pulling updates takes effect immediately:
+
+| File | Symlinked to |
+|---|---|
+| `tmux.conf` | `~/.tmux.conf` |
+| `.vimrc` | `~/.vimrc` |
+| `lfrc` | `~/.config/lf/lfrc` |
+| `coc-settings.json` | `~/.vim/coc-settings.json` |
+
+`dev-session.sh` is copied to `~/bin/dev-session` (executable).
+
+---
 
 ## Vim Setup
 ### Setup the plugin manager:
@@ -52,10 +79,7 @@ Install Go tools: Once the plugins are installed, run `:GoInstallBinaries` or `:
 :CocInstall coc-go
 ```
 
-Copy `coc-settings.json` from this repo to `~/.vim/coc-settings.json` (or `~/.config/nvim/coc-settings.json` for Neovim):
-```
-cp coc-settings.json ~/.vim/coc-settings.json
-```
+`coc-settings.json` is symlinked to `~/.vim/coc-settings.json` by `install.sh`.
 
 **Completion keybindings** (already in `.vimrc`):
 - `Tab` / `Shift-Tab` — cycle through suggestions
