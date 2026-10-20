@@ -23,14 +23,17 @@ Options:
   --help              Show this help message
 
 Arguments:
-  session-name        Name of the tmux session (default: "dev")
+  session-name        Name of the tmux session (will be prepended with "dev-")
+                      If a directory path is passed, uses "dev" session in that directory
   project-root        Project directory (default: current directory)
 
 Examples:
-  dev-session.sh                              # Creates/attaches "dev" session in $PWD
-  dev-session.sh sasquat /code/sasquat        # Creates/attaches "sasquat" session
-  dev-session.sh --list                       # Lists all tmux sessions
-  dev-session.sh --help                       # Shows this help
+  dev-session.sh                           # Creates/attaches "dev" session in $PWD
+  dev-session.sh sasquat                   # Creates/attaches "dev-sasquat" session in $PWD
+  dev-session.sh sasquat /code/sasquat     # Creates/attaches "dev-sasquat" session in /code/sasquat
+  dev-session.sh /code/sasquat             # Creates/attaches "dev" session in /code/sasquat
+  dev-session.sh --list                    # Lists all tmux sessions
+  dev-session.sh --help                    # Shows this help
 
 EOF
 }
@@ -54,8 +57,25 @@ case "${1:-}" in
     ;;
 esac
 
-SESSION="${1:-dev}"
-ROOT="${2:-$PWD}"   # defaults to current directory; override with second arg
+# Parse session name and project root
+# Logic: if arg1 exists and is a directory, it's the project root
+# Otherwise, arg1 is the session name and arg2 (if provided) is the project root
+SESSION_NAME="${1:-dev}"
+if [ -d "$SESSION_NAME" ]; then
+  # First arg is a directory, so it's the project root (using default session name)
+  SESSION_NAME="dev"
+  ROOT="$SESSION_NAME"
+else
+  # First arg is a session name
+  ROOT="${2:-$PWD}"  # Second arg is project root, or current directory
+fi
+
+# Prepend "dev-" to session name (unless it's already "dev" as default)
+if [ "$SESSION_NAME" != "dev" ]; then
+  SESSION="dev-$SESSION_NAME"
+else
+  SESSION="dev"
+fi
 
 # If already inside tmux, switch; otherwise attach or create
 tmux_cmd() {
