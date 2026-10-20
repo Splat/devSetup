@@ -3,16 +3,59 @@
 # dev-session.sh — launch (or attach to) a persistent Go dev tmux session
 #
 # Usage:
-#   ./dev-session.sh [project-root]
+#   ./dev-session.sh [session-name] [project-root]
+#   ./dev-session.sh --list
+#   ./dev-session.sh --help
 #
-# If a session named "dev" already exists, attaches to it.
+# If a session already exists, attaches to it.
 # Otherwise creates the full layout from scratch.
 # =============================================================================
 
 set -euo pipefail
 
-SESSION="dev"
-ROOT="${1:-$PWD}"   # defaults to current directory; override with first arg
+# ── Helper functions ──────────────────────────────────────────────────────────
+show_help() {
+  cat << 'EOF'
+Usage: dev-session.sh [OPTIONS] [session-name] [project-root]
+
+Options:
+  --list              List all available tmux sessions
+  --help              Show this help message
+
+Arguments:
+  session-name        Name of the tmux session (default: "dev")
+  project-root        Project directory (default: current directory)
+
+Examples:
+  dev-session.sh                              # Creates/attaches "dev" session in $PWD
+  dev-session.sh sasquat /code/sasquat        # Creates/attaches "sasquat" session
+  dev-session.sh --list                       # Lists all tmux sessions
+  dev-session.sh --help                       # Shows this help
+
+EOF
+}
+
+list_sessions() {
+  if ! tmux list-sessions 2>/dev/null; then
+    echo "No tmux sessions available."
+    exit 0
+  fi
+}
+
+# ── Parse arguments ───────────────────────────────────────────────────────────
+case "${1:-}" in
+  --help)
+    show_help
+    exit 0
+    ;;
+  --list)
+    list_sessions
+    exit 0
+    ;;
+esac
+
+SESSION="${1:-dev}"
+ROOT="${2:-$PWD}"   # defaults to current directory; override with second arg
 
 # If already inside tmux, switch; otherwise attach or create
 tmux_cmd() {
