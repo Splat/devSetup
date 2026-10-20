@@ -70,11 +70,13 @@ else
   ROOT="${2:-$PWD}"  # Second arg is project root, or current directory
 fi
 
-# Prepend "dev-" to session name (unless it's already "dev" as default)
-if [ "$SESSION_NAME" != "dev" ]; then
-  SESSION="dev-$SESSION_NAME"
-else
+# Prepend "dev-" to session name (unless it's already "dev" or starts with "dev-")
+if [ "$SESSION_NAME" = "dev" ]; then
   SESSION="dev"
+elif [[ "$SESSION_NAME" == dev-* ]]; then
+  SESSION="$SESSION_NAME"  # Already has dev- prefix
+else
+  SESSION="dev-$SESSION_NAME"
 fi
 
 # If already inside tmux, switch; otherwise attach or create
