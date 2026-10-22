@@ -1,5 +1,16 @@
 # devSetup
-This repo stores scripts and configs to quickly bootstrap my development environment.
+
+A one-command bootstrap for a Go-focused terminal development environment, built around tmux. It installs and configures the tooling, then gives each project a ready-made, persistent tmux session.
+
+**What it provides**
+- **Environment bootstrap and updates:** `install.sh` installs Homebrew, tmux, lf, Node, Go tooling (`gopls`, `dlv`), vim-plug and TPM, and links the configs in this repo into place. It is safe to re-run, and `--upgrade` brings installed tools up to date.
+- **Windowed tmux sessions:** `dev-session` creates a consistent five-window layout per project: editor with file explorer, Claude Code, GitHub Copilot CLI, a shell with Go test and git panes, and a debugger (delve).
+- **Session state management:** sessions persist, so you can detach and come back with everything as you left it. Re-running `dev-session` attaches to an existing session instead of creating a duplicate. Sessions can be listed, switched between, and killed individually or all at once.
+
+**Why use it**
+- A new machine or project goes from nothing to a working setup in minutes, with the same layout every time.
+- Configs live in version control and are symlinked, so changes apply immediately and stay in sync across machines.
+- Several projects can run side by side as named sessions, each rooted in its own directory.
 
 ## Quick Start
 
