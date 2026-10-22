@@ -3,7 +3,7 @@
 A one-command bootstrap for a Go-focused terminal development environment, built around tmux. It installs and configures the tooling, then gives each project a ready-made, persistent tmux session.
 
 **What it provides**
-- **Environment bootstrap and updates:** `install.sh` installs Homebrew, tmux, lf, Node, Go tooling (`gopls`, `dlv`), vim-plug and TPM, and links the configs in this repo into place. It is safe to re-run, and `--upgrade` brings installed tools up to date.
+- **Environment bootstrap and updates:** `install.sh` installs Homebrew, git, Go, tmux, lf, Node, the AI assistants (Claude Code, GitHub Copilot CLI, Codex), Go tooling (`gopls`, `dlv`), vim-plug and TPM, and links the configs in this repo into place. It is safe to re-run, and `--upgrade` brings installed tools up to date.
 - **Windowed tmux sessions:** `dev-session` creates a consistent five-window layout per project: editor with file explorer, Claude Code, GitHub Copilot CLI, a shell with Go test and git panes, and a debugger (delve).
 - **Session state management:** sessions persist, so you can detach and come back with everything as you left it. Re-running `dev-session` attaches to an existing session instead of creating a duplicate. Sessions can be listed, switched between, and killed individually or all at once.
 
@@ -14,7 +14,7 @@ A one-command bootstrap for a Go-focused terminal development environment, built
 
 ## Quick Start
 
-Clone the repo and run the install script — it handles Homebrew, tmux, lf, Node, Go tools, vim-plug, and all config symlinks:
+Clone the repo and run the install script — it handles Homebrew, git, Go, tmux, lf, Node, Claude Code, Copilot CLI, Codex, Go tools, vim-plug, and all config symlinks:
 
 ```bash
 git clone https://github.com/Splat/devSetup ~/code/devSetup
@@ -36,7 +36,9 @@ git pull
 ```
 
 `--upgrade` additionally:
-- runs `brew upgrade` for tmux, lf, and node (run `brew update` first for the newest versions)
+- runs `brew upgrade` for git, Go, tmux, lf, node, Copilot CLI and Codex when Homebrew manages them (run `brew update` first for the newest versions)
+- runs `claude update` for Claude Code when it was installed outside Homebrew
+- skips tools installed some other way (for example Go from go.dev) and tells you to update them manually
 - runs `git pull` on TPM
 - reinstalls `gopls` and `dlv` at `@latest`
 - re-downloads vim-plug

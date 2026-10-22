@@ -33,18 +33,48 @@ else
 fi
 
 # ── CLI tools via brew ────────────────────────────────────────────────────────
-for pkg in tmux lf node; do
-  if ! command -v "$pkg" &>/dev/null; then
-    info "Installing $pkg..."
-    brew install "$pkg"
-    success "$pkg installed"
-  elif [[ $UPGRADE -eq 1 ]]; then
-    info "Upgrading $pkg..."
-    brew upgrade "$pkg" || true
-  else
-    skip "$pkg"
+# brew_tool <command> <brew-name> [cask] [self-update-cmd...]
+# Installs if the command is missing. With --upgrade, upgrades only if Homebrew
+# manages it; otherwise runs the tool's own updater, or warns if it has none
+# (e.g. Go from go.dev, claude from its native installer).
+brew_tool() {
+  local cmd="$1" name="$2" kind="${3:-formula}"
+  shift 3 || shift $#
+  local flag="--formula" upgrade_flags=()
+  if [[ "$kind" == "cask" ]]; then
+    flag="--cask"
+    upgrade_flags=(--cask --greedy)
   fi
-done
+
+  if ! command -v "$cmd" &>/dev/null; then
+    info "Installing $name..."
+    brew install "$flag" "$name"
+    success "$name installed"
+  elif [[ $UPGRADE -eq 1 ]]; then
+    if brew list "$flag" "$name" &>/dev/null; then
+      info "Upgrading $name..."
+      brew upgrade "${upgrade_flags[@]}" "$name" || true
+    elif [[ $# -gt 0 ]]; then
+      info "Updating $cmd via '$*'..."
+      "$@" || echo "[install] WARNING: '$*' failed — continuing"
+    else
+      echo "[install] - $cmd not managed by Homebrew; update it manually"
+    fi
+  else
+    skip "$cmd"
+  fi
+}
+
+brew_tool git   git          formula
+brew_tool go    go           formula
+brew_tool tmux  tmux         formula
+brew_tool lf    lf           formula
+brew_tool node  node         formula
+
+# ── AI coding assistants ──────────────────────────────────────────────────────
+brew_tool claude  claude-code  cask claude update
+brew_tool copilot copilot-cli  cask
+brew_tool codex   codex        cask
 
 # ── TPM (tmux plugin manager) ─────────────────────────────────────────────────
 if [[ ! -d "$HOME/.tmux/plugins/tpm" ]]; then
@@ -60,7 +90,7 @@ fi
 
 # ── Go tools ──────────────────────────────────────────────────────────────────
 if ! command -v go &>/dev/null; then
-  echo "[install] ERROR: go not found — install Go first: https://go.dev/dl/"
+  echo "[install] ERROR: go not found after install — check your PATH"
   exit 1
 fi
 
