@@ -5,6 +5,8 @@
 # Usage:
 #   ./dev-session.sh [session-name] [project-root]
 #   ./dev-session.sh --list
+#   ./dev-session.sh --kill [session-name]
+#   ./dev-session.sh --kill-all
 #   ./dev-session.sh --help
 #
 # If a session already exists, attaches to it.
@@ -20,6 +22,8 @@ Usage: dev-session.sh [OPTIONS] [session-name] [project-root]
 
 Options:
   --list              List all available tmux sessions
+  --kill [name]       Kill a session (name resolved like below; default "dev")
+  --kill-all          Kill all dev sessions ("dev" and "dev-*")
   --help              Show this help message
 
 Arguments:
@@ -33,6 +37,9 @@ Examples:
   dev-session.sh sasquat /code/sasquat     # Creates/attaches "dev-sasquat" session in /code/sasquat
   dev-session.sh /code/sasquat             # Creates/attaches "dev" session in /code/sasquat
   dev-session.sh --list                    # Lists all tmux sessions
+  dev-session.sh --kill sasquat            # Kills the "dev-sasquat" session
+  dev-session.sh --kill                    # Kills the "dev" session
+  dev-session.sh --kill-all                # Kills "dev" and every "dev-*" session
   dev-session.sh --help                    # Shows this help
 
 EOF
@@ -45,6 +52,38 @@ list_sessions() {
   fi
 }
 
+# Map a user-supplied name to a session name: "dev", "dev-*" kept, others get "dev-"
+resolve_session() {
+  case "$1" in
+    dev|dev-*) echo "$1" ;;
+    *)         echo "dev-$1" ;;
+  esac
+}
+
+kill_session() {
+  local target
+  target="$(resolve_session "${1:-dev}")"
+  if tmux has-session -t "=$target" 2>/dev/null; then
+    tmux kill-session -t "=$target"
+    echo "Killed session '$target'."
+  else
+    echo "Session '$target' not found." >&2
+    exit 1
+  fi
+}
+
+kill_all_sessions() {
+  local found=0 name
+  while IFS= read -r name; do
+    if [ "$name" = "dev" ] || [[ "$name" == dev-* ]]; then
+      tmux kill-session -t "=$name"
+      echo "Killed session '$name'."
+      found=1
+    fi
+  done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null || true)
+  [ "$found" -eq 1 ] || echo "No dev sessions to kill."
+}
+
 # ── Parse arguments ───────────────────────────────────────────────────────────
 case "${1:-}" in
   --help)
@@ -55,6 +94,14 @@ case "${1:-}" in
     list_sessions
     exit 0
     ;;
+  --kill)
+    kill_session "${2:-dev}"
+    exit 0
+    ;;
+  --kill-all)
+    kill_all_sessions
+    exit 0
+    ;;
 esac
 
 # Parse session name and project root
@@ -63,21 +110,20 @@ esac
 SESSION_NAME="${1:-dev}"
 if [ -d "$SESSION_NAME" ]; then
   # First arg is a directory, so it's the project root (using default session name)
+  ROOT="$(cd "$SESSION_NAME" && pwd)"
   SESSION_NAME="dev"
-  ROOT="$SESSION_NAME"
 else
   # First arg is a session name
   ROOT="${2:-$PWD}"  # Second arg is project root, or current directory
+  if [ ! -d "$ROOT" ]; then
+    echo "Error: project root '$ROOT' is not a directory." >&2
+    exit 1
+  fi
+  ROOT="$(cd "$ROOT" && pwd)"
 fi
 
 # Prepend "dev-" to session name (unless it's already "dev" or starts with "dev-")
-if [ "$SESSION_NAME" = "dev" ]; then
-  SESSION="dev"
-elif [[ "$SESSION_NAME" == dev-* ]]; then
-  SESSION="$SESSION_NAME"  # Already has dev- prefix
-else
-  SESSION="dev-$SESSION_NAME"
-fi
+SESSION="$(resolve_session "$SESSION_NAME")"
 
 # If already inside tmux, switch; otherwise attach or create
 tmux_cmd() {

@@ -45,6 +45,16 @@ Plugins are updated separately: `:PlugUpdate` in vim and `Ctrl-a U` in tmux.
 
 `dev-session.sh` is copied to `~/bin/dev-session` (executable).
 
+Session management:
+
+```bash
+dev-session                 # create/attach "dev" in $PWD
+dev-session myproj          # create/attach "dev-myproj"
+dev-session --list          # list tmux sessions
+dev-session --kill myproj   # kill "dev-myproj" (no name = "dev")
+dev-session --kill-all      # kill "dev" and all "dev-*" sessions
+```
+
 ---
 
 ## Vim Setup

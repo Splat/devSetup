@@ -69,8 +69,12 @@ for tool in "golang.org/x/tools/gopls@latest" "github.com/go-delve/delve/cmd/dlv
   bin="${bin%%@*}"
   if ! command -v "$bin" &>/dev/null || [[ $UPGRADE -eq 1 ]]; then
     info "Installing/upgrading $bin..."
-    go install "$tool"
-    success "$bin installed"
+    # Don't abort the whole install if a tool needs a newer Go than installed
+    if go install "$tool"; then
+      success "$bin installed"
+    else
+      echo "[install] WARNING: failed to install $bin (check your Go version) — continuing"
+    fi
   else
     skip "$bin"
   fi
