@@ -13,6 +13,25 @@ cd ~/code/devSetup
 
 After it completes, follow the printed manual steps (vim plugins + tmux plugins).
 
+### Updating an existing install
+
+Pull the latest repo changes and re-run the script. It is safe to re-run: config symlinks and `dev-session` are refreshed, and already-installed tools are skipped.
+
+```bash
+cd ~/code/devSetup
+git pull
+./install.sh            # refresh configs and dev-session only
+./install.sh --upgrade  # also upgrade installed tools
+```
+
+`--upgrade` additionally:
+- runs `brew upgrade` for tmux, lf, and node (run `brew update` first for the newest versions)
+- runs `git pull` on TPM
+- reinstalls `gopls` and `dlv` at `@latest`
+- re-downloads vim-plug
+
+Plugins are updated separately: `:PlugUpdate` in vim and `Ctrl-a U` in tmux.
+
 ### Config symlinks
 
 `install.sh` symlinks configs from the repo rather than copying them, so pulling updates takes effect immediately:
