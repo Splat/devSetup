@@ -129,8 +129,12 @@ SESSION="$(resolve_session "$SESSION_NAME")"
 tmux_cmd() {
   if [ -n "${TMUX:-}" ]; then
     tmux switch-client -t "$SESSION"
-  else
+  elif [ -t 0 ] && [ -t 1 ]; then
     tmux attach-session -t "$SESSION"
+  else
+    echo "Session '$SESSION' is ready, but this shell isn't an interactive terminal." >&2
+    echo "Attach from a real terminal with:  tmux attach -t $SESSION" >&2
+    exit 1
   fi
 }
 

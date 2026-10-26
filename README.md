@@ -22,7 +22,7 @@ cd ~/code/devSetup
 ./install.sh
 ```
 
-After it completes, follow the printed manual steps (vim plugins + tmux plugins).
+After it completes, reload your shell (`source ~/.zshrc`) and sign in to `claude`, `copilot` (`/login`) and `codex` on first use. Vim and tmux plugins are installed automatically.
 
 ### Updating an existing install
 
@@ -43,7 +43,7 @@ git pull
 - reinstalls `gopls` and `dlv` at `@latest`
 - re-downloads vim-plug
 
-Plugins are updated separately: `:PlugUpdate` in vim and `Ctrl-a U` in tmux.
+- updates vim plugins (`:PlugUpdate`, which also refreshes vim-go's binaries) and tmux plugins (TPM `update_plugins`)
 
 ### Config symlinks
 
@@ -71,57 +71,15 @@ dev-session --kill-all      # kill "dev" and all "dev-*" sessions
 ---
 
 ## Vim Setup
-### Setup the plugin manager:
-```
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-```
 
-### Install gopls
-`go install golang.org/x/tools/gopls@latest`
+`install.sh` fully automates this — no manual steps needed:
 
-### Configure `.vimrc`
-Either store in `~/.vimrc` or `~/config/nvim/init.vim`. Been switching to Neovim but still prefer the old days. 
+- installs vim-plug and symlinks `.vimrc` (plugins, Go settings, and coc keymaps live there) and `coc-settings.json`
+- runs `:PlugInstall` (`:PlugUpdate` with `--upgrade`), which also fetches vim-go's Go binaries
+- installs `coc-go` (LSP + autocomplete via gopls)
+- installs `gopls`, `dlv`, and `godoc`, and puts `$GOPATH/bin` on your `PATH`
 
-```
-" -------------------------------
-"  Configure Basic Vim Settings
-"  ------------------------------
-set number relativenumber
-
-" -------------------------------
-" Plugin section
-" -------------------------------
-call plug#begin('~/.vim/plugged')
-Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-" Optional: Add other useful plugins
-" Plug 'dense-analysis/ale'         " For linting and formatting
-" Plug 'preservim/nerdtree'         " For a file explorer
-call plug#end()
-
-" -------------------------------
-" Golang settings
-" -------------------------------
-let g:go_fmt_command = "goimports"        " Use goimports for formatting and managing imports on save
-let g:go_def_mode = 'gopls'              " Use gopls for 'go to definition'
-let g:go_info_mode = 'gopls'             " Use gopls for type info
-let g:go_gopls_enabled = 1               " Enable gopls integration
-
-" Auto format on save
-autocmd BufWritePre *.go :silent! :GoImports
-```
-
-### Install Plugins and Go Binaries 
-Install the plugins: Open Vim and run the command `:PlugInstall`.
-Install Go tools: Once the plugins are installed, run `:GoInstallBinaries` or `:GoUpdateBinaries` inside Vim to download and compile all necessary Go tools, including gopls and goimports.
-
-### Install coc-go (LSP + Autocomplete)
-`coc-go` routes Go files to gopls inside coc.nvim, enabling autocomplete, diagnostics, and hover docs. After `:PlugInstall`, run inside Vim:
-```
-:CocInstall coc-go
-```
-
-`coc-settings.json` is symlinked to `~/.vim/coc-settings.json` by `install.sh`.
+Neovim users can point `~/.config/nvim/init.vim` at the same `.vimrc`.
 
 **Completion keybindings** (already in `.vimrc`):
 - `Tab` / `Shift-Tab` — cycle through suggestions
@@ -134,7 +92,7 @@ Show documentation: Hover over a symbol and press `K` (or run `:GoDoc`).
 Run tests: Use `:GoTest` to run tests for the current package.
 Build/Run: Use `:GoBuild` or `:GoRun` to compile and execute your code. 
 
-With these steps, your Vim ha the beasic of features for Go development, including auto-completion, formatting, and debugging support. 
+With this setup, Vim has the basics for Go development: auto-completion, formatting, and debugging support.
 
 ### Quick Command Reference (Golang)
 - **GoRun**: Executes your current file(s) with go run.
@@ -146,19 +104,5 @@ With these steps, your Vim ha the beasic of features for Go development, includi
 - **GoImport**: Manages package imports.
 - **GoRename**: Renames the identifier under the cursor across all files in the package.
 
-### Ensure ENV Configured
-ensure the the `GOPATH` and `PATH` are properly configuerd in `~/.bash_profile` and `~/.zshrc`. Delve won't install properly or at all without this. 
-```
-export GOPATH="$HOME/go"
-export PATH="$GOPATH/bin:$PATH"
-```
-
-### GoDoc
-Projects worked on all conform to GoDoc and as such should be installed. 
-`go install golang.org/x/tools/cmd/godoc@latest`
-To run from within project jsut `godoc -http :8080`
-
-
-### Debugging
-Install the Delve debugger and just avoid using GDB unless necessary or on someone else's machine/server. 
-`go install github.com/go-delve/delve/cmd/dlv@latest`
+### GoDoc and Debugging
+`godoc` and the Delve debugger (`dlv`) are installed by `install.sh`. Run docs from a project with `godoc -http :8080`. Prefer Delve over GDB.

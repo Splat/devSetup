@@ -94,7 +94,10 @@ if ! command -v go &>/dev/null; then
   exit 1
 fi
 
-for tool in "golang.org/x/tools/gopls@latest" "github.com/go-delve/delve/cmd/dlv@latest"; do
+# Go-installed binaries (dlv, gopls, godoc) live here; needed for the checks below
+export PATH="$(go env GOPATH)/bin:$PATH"
+
+for tool in "golang.org/x/tools/gopls@latest" "github.com/go-delve/delve/cmd/dlv@latest" "golang.org/x/tools/cmd/godoc@latest"; do
   bin="${tool##*/}"
   bin="${bin%%@*}"
   if ! command -v "$bin" &>/dev/null || [[ $UPGRADE -eq 1 ]]; then
@@ -150,6 +153,30 @@ else
   skip "dev-session"
 fi
 
+# ── Vim plugins (headless) ────────────────────────────────────────────────────
+# PlugInstall/PlugUpdate also runs vim-go's GoUpdateBinaries hook.
+if [[ $UPGRADE -eq 1 ]]; then PLUG_CMD="PlugUpdate"; else PLUG_CMD="PlugInstall"; fi
+info "Running vim :$PLUG_CMD --sync..."
+if vim -N -es -u "$HOME/.vimrc" -i NONE -c "$PLUG_CMD --sync" -c "qa!" </dev/null; then
+  success "vim plugins ready"
+else
+  echo "[install] WARNING: :$PLUG_CMD failed — run it manually inside vim"
+fi
+
+info "Installing coc-go..."
+if vim -N -es -u "$HOME/.vimrc" -i NONE -c "CocInstall -sync coc-go" -c "qa!" </dev/null; then
+  success "coc-go ready"
+else
+  echo "[install] WARNING: :CocInstall coc-go failed — run it manually inside vim"
+fi
+
+# ── tmux plugins (TPM, headless) ──────────────────────────────────────────────
+if [[ $UPGRADE -eq 1 ]]; then
+  "$HOME/.tmux/plugins/tpm/bin/update_plugins" all || echo "[install] WARNING: TPM update failed"
+else
+  "$HOME/.tmux/plugins/tpm/bin/install_plugins" || echo "[install] WARNING: TPM install failed"
+fi
+
 # ── PATH entries ─────────────────────────────────────────────────────────────
 SHELL_RC="$HOME/.zshrc"
 [[ "$SHELL" == *bash* ]] && SHELL_RC="$HOME/.bash_profile"
@@ -176,20 +203,37 @@ else
   skip "~/bin already in PATH"
 fi
 
-# ── Final manual steps ────────────────────────────────────────────────────────
+# Go-installed tools (dlv, gopls, godoc) need GOPATH/bin on PATH or they won't be found
+if ! grep -q 'GOPATH' "$SHELL_RC" 2>/dev/null; then
+  cat >> "$SHELL_RC" <<'EOF'
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+EOF
+  success "Added GOPATH/bin to PATH in $SHELL_RC"
+else
+  skip "GOPATH already in $SHELL_RC"
+fi
+
+# ── Final steps ───────────────────────────────────────────────────────────────
+# A tmux server started before an upgrade keeps running the old version, and the
+# new client can't attach to it ("open terminal failed: not a terminal").
+if tmux info &>/dev/null; then
+  client_ver="$(tmux -V | awk '{print $2}')"
+  server_ver="$(tmux display-message -p '#{version}' 2>/dev/null || true)"
+  if [[ -n "$server_ver" && "$client_ver" != "$server_ver" ]]; then
+    echo ""
+    echo "[install] WARNING: running tmux server is $server_ver but installed tmux is $client_ver."
+    echo "          New sessions/attach will fail until the server restarts."
+    echo "          Save your work, then run 'tmux kill-server' (ends ALL sessions)."
+  fi
+fi
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Manual steps remaining:"
+echo "  Done. Remaining:"
 echo ""
 echo "  1. Reload your shell:"
 echo "       source $SHELL_RC"
 echo ""
-echo "  2. Install vim plugins (inside vim):"
-echo "       :PlugInstall   (or :PlugUpdate after --upgrade)"
-echo "       :GoInstallBinaries"
-echo "       :CocInstall coc-go"
-echo ""
-echo "  3. Install tmux plugins:"
-echo "       tmux"
-echo "       # then press: Ctrl-a I  (or Ctrl-a U to update)"
+echo "  2. Sign in on first use: claude, copilot (/login), codex"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
