@@ -24,14 +24,19 @@ Window 3 — copilot
 │   copilot                                │
 └──────────────────────────────────────────┘
 
-Window 4 — shell
+Window 4 — opencode
+┌──────────────────────────────────────────┐
+│   opencode                               │
+└──────────────────────────────────────────┘
+
+Window 5 — shell
 ┌──────────────────────────────────────────┐
 │   go build / go run / go generate        │
 ├─────────────────────────┬────────────────┤
 │   go test -v ./...      │   git / misc   │
 └─────────────────────────┴────────────────┘
 
-Window 5 — debug
+Window 6 — debug
 ┌──────────────────────────────────────────┐
 │   dlv debug / dlv test                   │
 ├─────────────────────────┬────────────────┤
@@ -104,7 +109,15 @@ copilot
 
 Requires an active GitHub Copilot subscription. This replaces the deprecated `gh copilot` extension.
 
-### 6. Install Delve (Go debugger)
+### 6. Install opencode
+
+```bash
+brew install opencode
+```
+
+On first launch, authenticate with `opencode auth login`. Window 4 launches `opencode` automatically. In tmux, opencode captures the mouse, so hold Option (iTerm2) or Fn (Terminal.app) while dragging to use tmux/terminal selection.
+
+### 7. Install Delve (Go debugger)
 
 ```bash
 go install github.com/go-delve/delve/cmd/dlv@latest

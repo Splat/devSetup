@@ -75,6 +75,7 @@ brew_tool node  node         formula
 brew_tool claude  claude-code  cask claude update
 brew_tool copilot copilot-cli  cask
 brew_tool codex   codex        cask
+brew_tool opencode opencode    formula opencode upgrade
 
 # ── TPM (tmux plugin manager) ─────────────────────────────────────────────────
 if [[ ! -d "$HOME/.tmux/plugins/tpm" ]]; then
@@ -235,5 +236,5 @@ echo ""
 echo "  1. Reload your shell:"
 echo "       source $SHELL_RC"
 echo ""
-echo "  2. Sign in on first use: claude, copilot (/login), codex"
+echo "  2. Sign in on first use: claude, copilot (/login), codex, opencode (auth login)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

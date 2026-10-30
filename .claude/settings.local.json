@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/rdonah204@cable.comcast.com/.config/lf/**)",
+      "Bash(gh --version)",
+      "Bash(gh extension *)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl *)"
+    ]
+  }
+}

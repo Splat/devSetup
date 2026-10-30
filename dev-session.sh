@@ -7,6 +7,7 @@
 #   ./dev-session.sh --list
 #   ./dev-session.sh --kill [session-name]
 #   ./dev-session.sh --kill-all
+#   ./dev-session.sh --refresh [session-name] [project-root]
 #   ./dev-session.sh --help
 #
 # If a session already exists, attaches to it.
@@ -22,24 +23,28 @@ Usage: dev-session.sh [OPTIONS] [session-name] [project-root]
 
 Options:
   --list              List all available tmux sessions
-  --kill [name]       Kill a session (name resolved like below; default "dev")
+  --kill [name]       Kill a session (name resolved like below; default: current folder's)
   --kill-all          Kill all dev sessions ("dev" and "dev-*")
+  --refresh [name]    Add any missing layout windows to a running session
+                      without touching existing windows or processes
   --help              Show this help message
 
 Arguments:
   session-name        Name of the tmux session (will be prepended with "dev-")
-                      If a directory path is passed, uses "dev" session in that directory
+                      Defaults to the project folder's name (e.g. "dev-myapp").
+                      If a directory path is passed, names it after that folder
   project-root        Project directory (default: current directory)
 
 Examples:
-  dev-session.sh                           # Creates/attaches "dev" session in $PWD
+  dev-session.sh                           # Creates/attaches "dev-<current folder>" in $PWD
   dev-session.sh sasquat                   # Creates/attaches "dev-sasquat" session in $PWD
   dev-session.sh sasquat /code/sasquat     # Creates/attaches "dev-sasquat" session in /code/sasquat
-  dev-session.sh /code/sasquat             # Creates/attaches "dev" session in /code/sasquat
+  dev-session.sh /code/sasquat             # Creates/attaches "dev-sasquat" in /code/sasquat
   dev-session.sh --list                    # Lists all tmux sessions
   dev-session.sh --kill sasquat            # Kills the "dev-sasquat" session
-  dev-session.sh --kill                    # Kills the "dev" session
+  dev-session.sh --kill                    # Kills the current folder's session
   dev-session.sh --kill-all                # Kills "dev" and every "dev-*" session
+  dev-session.sh --refresh                 # Adds missing windows (e.g. opencode) to the running session
   dev-session.sh --help                    # Shows this help
 
 EOF
@@ -60,9 +65,17 @@ resolve_session() {
   esac
 }
 
+# Session name derived from a directory's basename (tmux disallows "." and ":")
+dir_session_name() {
+  local base
+  base="$(basename "$1")"
+  base="${base//[.:]/_}"
+  echo "${base:-dev}"
+}
+
 kill_session() {
   local target
-  target="$(resolve_session "${1:-dev}")"
+  target="$(resolve_session "${1:-$(dir_session_name "$PWD")}")"
   if tmux has-session -t "=$target" 2>/dev/null; then
     tmux kill-session -t "=$target"
     echo "Killed session '$target'."
@@ -95,7 +108,7 @@ case "${1:-}" in
     exit 0
     ;;
   --kill)
-    kill_session "${2:-dev}"
+    kill_session "${2:-}"
     exit 0
     ;;
   --kill-all)
@@ -104,22 +117,29 @@ case "${1:-}" in
     ;;
 esac
 
+REFRESH=0
+if [ "${1:-}" = "--refresh" ]; then
+  REFRESH=1
+  shift
+fi
+
 # Parse session name and project root
 # Logic: if arg1 exists and is a directory, it's the project root
 # Otherwise, arg1 is the session name and arg2 (if provided) is the project root
-SESSION_NAME="${1:-dev}"
-if [ -d "$SESSION_NAME" ]; then
-  # First arg is a directory, so it's the project root (using default session name)
+SESSION_NAME="${1:-}"
+if [ -n "$SESSION_NAME" ] && [ -d "$SESSION_NAME" ]; then
+  # First arg is a directory, so it's the project root (name comes from its folder)
   ROOT="$(cd "$SESSION_NAME" && pwd)"
-  SESSION_NAME="dev"
+  SESSION_NAME="$(dir_session_name "$ROOT")"
 else
-  # First arg is a session name
+  # First arg is a session name (or omitted)
   ROOT="${2:-$PWD}"  # Second arg is project root, or current directory
   if [ ! -d "$ROOT" ]; then
     echo "Error: project root '$ROOT' is not a directory." >&2
     exit 1
   fi
   ROOT="$(cd "$ROOT" && pwd)"
+  [ -n "$SESSION_NAME" ] || SESSION_NAME="$(dir_session_name "$ROOT")"
 fi
 
 # Prepend "dev-" to session name (unless it's already "dev" or starts with "dev-")
@@ -138,14 +158,32 @@ tmux_cmd() {
   fi
 }
 
-# ── Already exists? Just attach ───────────────────────────────────────────────
-if tmux has-session -t "$SESSION" 2>/dev/null; then
+# ── Already exists? Attach (or refresh missing windows first) ─────────────────
+SESSION_EXISTS=0
+tmux has-session -t "=$SESSION" 2>/dev/null && SESSION_EXISTS=1
+
+if [ "$SESSION_EXISTS" -eq 1 ] && [ "$REFRESH" -eq 0 ]; then
   echo "Session '$SESSION' exists — attaching."
   tmux_cmd
   exit 0
 fi
 
-# ── Create session with window 1: Editor ──────────────────────────────────────
+window_exists() {
+  tmux list-windows -t "=$SESSION" -F '#{window_name}' 2>/dev/null | grep -qxF "$1"
+}
+
+# Create window $1 right after the previous layout window (PREV), without
+# switching to it. The first window of a brand-new session is made by new-session.
+PREV=""
+new_win() {
+  if [ -z "$PREV" ]; then
+    tmux new-window -d -b -t "$SESSION:^" -n "$1" -c "$ROOT"
+  else
+    tmux new-window -d -a -t "$SESSION:$PREV" -n "$1" -c "$ROOT"
+  fi
+}
+
+# ── Window: Editor ────────────────────────────────────────────────────────────
 #
 #  ┌─────────────────────┬────────────────┐
 #  │                     │                │
@@ -155,18 +193,18 @@ fi
 #  │                     │                │
 #  └─────────────────────┴────────────────┘
 #
-tmux new-session  -d -s "$SESSION" -n "editor" -c "$ROOT"
+build_editor() {
+  # Split right ~25% for file explorer
+  tmux split-window -h -l 25% -t "$SESSION:editor" -c "$ROOT"
+  tmux send-keys    -t "$SESSION:editor.right" \
+    'command -v lf &>/dev/null && lf || command -v nnn &>/dev/null && nnn || watch -n2 tree -L 3' Enter
 
-# Split right ~25% for file explorer
-tmux split-window -h -l 25% -t "$SESSION:editor" -c "$ROOT"
-tmux send-keys    -t "$SESSION:editor.right" \
-  'command -v lf &>/dev/null && lf || command -v nnn &>/dev/null && nnn || watch -n2 tree -L 3' Enter
+  # Focus left pane, open vim
+  tmux select-pane  -t "$SESSION:editor.left"
+  tmux send-keys    -t "$SESSION:editor.left" 'vim .' Enter
+}
 
-# Focus left pane, open vim
-tmux select-pane  -t "$SESSION:editor.left"
-tmux send-keys    -t "$SESSION:editor.left" 'vim .' Enter
-
-# ── Window 2: Claude Code ─────────────────────────────────────────────────────
+# ── Window: Claude Code ───────────────────────────────────────────────────────
 #
 #  ┌─────────────────────────────────────┐
 #  │                                     │
@@ -174,19 +212,31 @@ tmux send-keys    -t "$SESSION:editor.left" 'vim .' Enter
 #  │                                     │
 #  └─────────────────────────────────────┘
 #
-tmux new-window   -t "$SESSION" -n "claude" -c "$ROOT"
-tmux send-keys    -t "$SESSION:claude" 'claude' Enter
+build_claude() {
+  tmux send-keys -t "$SESSION:claude" 'claude' Enter
+}
 
-# ── Window 3: GitHub Copilot CLI ──────────────────────────────────────────────
+# ── Window: GitHub Copilot CLI ────────────────────────────────────────────────
 #  brew install copilot-cli   (then /login on first run)
 #  ┌─────────────────────────────────────┐
 #  │        copilot (full width)         │
 #  └─────────────────────────────────────┘
 #
-tmux new-window -t "$SESSION" -n "copilot" -c "$ROOT"
-tmux send-keys -t "$SESSION:copilot" 'copilot' Enter
+build_copilot() {
+  tmux send-keys -t "$SESSION:copilot" 'copilot' Enter
+}
 
-# ── Window 4: Shell / go commands ─────────────────────────────────────────────
+# ── Window: opencode ──────────────────────────────────────────────────────────
+#  brew install opencode   (then `opencode auth login` on first run)
+#  ┌─────────────────────────────────────┐
+#  │        opencode (full width)        │
+#  └─────────────────────────────────────┘
+#
+build_opencode() {
+  tmux send-keys -t "$SESSION:opencode" 'opencode' Enter
+}
+
+# ── Window: Shell / go commands ───────────────────────────────────────────────
 #
 #  ┌─────────────────────────────────────┐
 #  │         go build / test / run       │
@@ -194,19 +244,20 @@ tmux send-keys -t "$SESSION:copilot" 'copilot' Enter
 #  │     go test -v     │  git / misc    │
 #  └────────────────────┴────────────────┘
 #
-tmux new-window   -t "$SESSION" -n "shell" -c "$ROOT"
-tmux split-window -v -l 35% -t "$SESSION:shell" -c "$ROOT"
-tmux split-window -h         -t "$SESSION:shell.bottom" -c "$ROOT"
+build_shell() {
+  tmux split-window -v -l 35% -t "$SESSION:shell" -c "$ROOT"
+  tmux split-window -h         -t "$SESSION:shell.bottom" -c "$ROOT"
 
-# Label bottom panes and launch test runner
-tmux select-pane  -t "$SESSION:shell.bottom-left"  -T "test"
-tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
-tmux send-keys    -t "$SESSION:shell.bottom-left"  'go test -v ./...' Enter
+  # Label bottom panes and launch test runner
+  tmux select-pane  -t "$SESSION:shell.bottom-left"  -T "test"
+  tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
+  tmux send-keys    -t "$SESSION:shell.bottom-left"  'go test -v ./...' Enter
 
-# Focus top pane (main shell for go build/run)
-tmux select-pane  -t "$SESSION:shell.top"
+  # Focus top pane (main shell for go build/run)
+  tmux select-pane  -t "$SESSION:shell.top"
+}
 
-# ── Window 5: Debug ───────────────────────────────────────────────────────────
+# ── Window: Debug ─────────────────────────────────────────────────────────────
 #
 #  ┌─────────────────────────────────────┐
 #  │         delve / dlv dap             │
@@ -214,22 +265,45 @@ tmux select-pane  -t "$SESSION:shell.top"
 #  │  program output    │  watch / logs  │
 #  └────────────────────┴────────────────┘
 #
-tmux new-window   -t "$SESSION" -n "debug" -c "$ROOT"
-tmux split-window -v -l 35% -t "$SESSION:debug" -c "$ROOT"
-tmux split-window -h         -t "$SESSION:debug.bottom" -c "$ROOT"
+build_debug() {
+  tmux split-window -v -l 35% -t "$SESSION:debug" -c "$ROOT"
+  tmux split-window -h         -t "$SESSION:debug.bottom" -c "$ROOT"
 
-tmux select-pane  -t "$SESSION:debug.top"    -T "dlv"
-tmux select-pane  -t "$SESSION:debug.bottom-left"  -T "output"
-tmux select-pane  -t "$SESSION:debug.bottom-right" -T "logs"
+  tmux select-pane  -t "$SESSION:debug.top"    -T "dlv"
+  tmux select-pane  -t "$SESSION:debug.bottom-left"  -T "output"
+  tmux select-pane  -t "$SESSION:debug.bottom-right" -T "logs"
 
-# Start watching test output by default in logs pane
-tmux send-keys    -t "$SESSION:debug.bottom-right" \
-  'echo "tail -f app.log  |  or:  go test -v ./... 2>&1 | tee /tmp/gotest.log"' Enter
+  # Start watching test output by default in logs pane
+  tmux send-keys    -t "$SESSION:debug.bottom-right" \
+    'echo "tail -f app.log  |  or:  go test -v ./... 2>&1 | tee /tmp/gotest.log"' Enter
 
-tmux select-pane  -t "$SESSION:debug.top"
+  tmux select-pane  -t "$SESSION:debug.top"
+}
 
-# ── Land on editor, pane 1 ────────────────────────────────────────────────────
-tmux select-window -t "$SESSION:editor"
-tmux select-pane   -t "$SESSION:editor.left"
+# ── Create the session (or, with --refresh, only the missing windows) ─────────
+if [ "$SESSION_EXISTS" -eq 0 ]; then
+  tmux new-session -d -s "$SESSION" -n "editor" -c "$ROOT"
+  build_editor
+  PREV="editor"
+else
+  echo "Refreshing session '$SESSION' — existing windows are left untouched."
+fi
+
+for win in editor claude copilot opencode shell debug; do
+  if window_exists "$win"; then
+    PREV="$win"
+    continue
+  fi
+  echo "Adding missing window '$win'."
+  new_win "$win"
+  "build_$win"
+  PREV="$win"
+done
+
+# ── Land on editor, pane 1 (fresh sessions only) ──────────────────────────────
+if [ "$SESSION_EXISTS" -eq 0 ]; then
+  tmux select-window -t "$SESSION:editor"
+  tmux select-pane   -t "$SESSION:editor.left"
+fi
 
 tmux_cmd
