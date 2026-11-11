@@ -109,6 +109,8 @@ copilot
 
 Requires an active GitHub Copilot subscription. This replaces the deprecated `gh copilot` extension.
 
+Window 3 launches `copilot --continue` automatically, resuming the most recent session (e.g. after a reboot) and falling back to a fresh `copilot` if there is none. Use `/new` inside Copilot to start over.
+
 ### 6. Install opencode
 
 ```bash
