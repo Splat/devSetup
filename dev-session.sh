@@ -224,7 +224,8 @@ build_claude() {
 #  └─────────────────────────────────────┘
 #
 build_copilot() {
-  tmux send-keys -t "$SESSION:copilot" 'copilot' Enter
+  # Resume the most recent session (e.g. after a reboot); start fresh if none
+  tmux send-keys -t "$SESSION:copilot" 'copilot --continue || copilot' Enter
 }
 
 # ── Window: opencode ──────────────────────────────────────────────────────────
