@@ -234,7 +234,8 @@ build_copilot() {
 #  └─────────────────────────────────────┘
 #
 build_opencode() {
-  tmux send-keys -t "$SESSION:opencode" 'opencode' Enter
+  # Resume the last session (e.g. after a reboot); opencode starts fresh if there is none
+  tmux send-keys -t "$SESSION:opencode" 'opencode --continue' Enter
 }
 
 # ── Window: Shell / go commands ───────────────────────────────────────────────

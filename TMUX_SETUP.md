@@ -115,7 +115,7 @@ Requires an active GitHub Copilot subscription. This replaces the deprecated `gh
 brew install opencode
 ```
 
-On first launch, authenticate with `opencode auth login`. Window 4 launches `opencode` automatically. In tmux, opencode captures the mouse, so hold Option (iTerm2) or Fn (Terminal.app) while dragging to use tmux/terminal selection.
+On first launch, authenticate with `opencode auth login`. Window 4 launches `opencode --continue` automatically, resuming the last session (e.g. after a reboot) or starting fresh if there is none; use `/new` inside opencode to start over. In tmux, opencode captures the mouse, so hold Option (iTerm2) or Fn (Terminal.app) while dragging to use tmux/terminal selection.
 
 ### 7. Install Delve (Go debugger)
 
