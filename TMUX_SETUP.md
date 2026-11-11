@@ -75,7 +75,7 @@ claude
 # follow the login prompt
 ```
 
-Window 2 launches `claude` automatically when the session starts.
+Window 2 launches `claude --continue` automatically when the session starts, resuming the last conversation for the project directory (e.g. after a reboot) and falling back to a fresh `claude` if there is none. Use `/clear` inside Claude to start over.
 
 ### 4. Install a file explorer (pick one)
 

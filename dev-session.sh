@@ -213,7 +213,8 @@ build_editor() {
 #  └─────────────────────────────────────┘
 #
 build_claude() {
-  tmux send-keys -t "$SESSION:claude" 'claude' Enter
+  # Resume this directory's last conversation (e.g. after a reboot); start fresh if none
+  tmux send-keys -t "$SESSION:claude" 'claude --continue || claude' Enter
 }
 
 # ── Window: GitHub Copilot CLI ────────────────────────────────────────────────
