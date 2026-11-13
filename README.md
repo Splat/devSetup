@@ -22,7 +22,7 @@ cd ~/code/devSetup
 ./install.sh
 ```
 
-After it completes, reload your shell (`source ~/.zshrc`) and sign in to `claude`, `copilot` (`/login`), `codex` and `opencode` (`opencode auth login`) on first use. Vim and tmux plugins are installed automatically.
+After it completes, reload your shell (`source ~/.zshrc`) and sign in to `claude`, `copilot` (`/login`), `codex` and `opencode` (`opencode auth login`) on first use, and run `:Copilot setup` once in Vim for inline completion. Vim and tmux plugins are installed automatically.
 
 ### Updating an existing install
 
@@ -78,13 +78,18 @@ dev-session --kill-all      # kill "dev" and all "dev-*" sessions
 - installs vim-plug and symlinks `.vimrc` (plugins, Go settings, and coc keymaps live there) and `coc-settings.json`
 - runs `:PlugInstall` (`:PlugUpdate` with `--upgrade`), which also fetches vim-go's Go binaries
 - installs `coc-go` (LSP + autocomplete via gopls)
+- installs [copilot.vim](https://github.com/github/copilot.vim) for AI inline suggestions (needs Node, which the installer provides)
 - installs `gopls`, `dlv`, and `godoc`, and puts `$GOPATH/bin` on your `PATH`
 
 Neovim users can point `~/.config/nvim/init.vim` at the same `.vimrc`.
 
+**First use:** run `:Copilot setup` in Vim once to sign in (requires a GitHub Copilot subscription). `:Copilot status` shows whether it's active.
+
 **Completion keybindings** (already in `.vimrc`):
-- `Tab` / `Shift-Tab` — cycle through suggestions
+- `Tab` / `Shift-Tab` — cycle through coc suggestions
+- `Tab` with no coc popup — accept the grey Copilot inline suggestion (otherwise inserts a normal Tab)
 - `Enter` — confirm selection
+- `Alt-]` / `Alt-[` — next / previous Copilot suggestion; `Ctrl-]` dismisses it
  
 ### Verify the Setup
 Open a Go file (e.g., `vim hello.go`) and test some of the features: 
