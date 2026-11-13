@@ -23,6 +23,7 @@ set incsearch
 call plug#begin('~/.vim/plugged')
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'neoclide/coc.nvim', {'branch': 'release'}    " LSP + completion
+Plug 'github/copilot.vim'                          " AI inline suggestions (sign in with :Copilot setup)
 " Optional: Add other useful plugins. Uncomment for usage
 " Plug 'dense-analysis/ale'         " For linting and formatting
 " Plug 'preservim/nerdtree'         " For a file explorer
@@ -36,9 +37,19 @@ nmap <silent> <leader>rn <Plug>(coc-rename)
 nmap <silent> [g <Plug>(coc-diagnostic-prev)
 nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
-" Tab-driven completion (coc.nvim)
-inoremap <silent><expr> <Tab>
-  \ coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
+" Tab-driven completion: coc popup first, then accept a Copilot suggestion, else a literal Tab
+let g:copilot_no_tab_map = v:true
+function! s:TabComplete() abort
+  if coc#pum#visible()
+    return coc#pum#next(1)
+  endif
+  let l:suggestion = copilot#GetDisplayedSuggestion()
+  if !empty(get(l:suggestion, 'text', ''))
+    return copilot#Accept("\<Tab>")
+  endif
+  return "\<Tab>"
+endfunction
+inoremap <silent><expr> <Tab> <SID>TabComplete()
 inoremap <silent><expr> <S-Tab> coc#pum#prev(1)
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
