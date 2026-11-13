@@ -69,6 +69,7 @@ brew_tool git   git          formula
 brew_tool go    go           formula
 brew_tool tmux  tmux         formula
 brew_tool lf    lf           formula
+brew_tool lazygit lazygit    formula
 brew_tool node  node         formula
 
 # ── AI coding assistants ──────────────────────────────────────────────────────

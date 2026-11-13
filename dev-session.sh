@@ -244,7 +244,7 @@ build_opencode() {
 #  ┌─────────────────────────────────────┐
 #  │         go build / test / run       │
 #  └────────────────────┬────────────────┘
-#  │     go test -v     │  git / misc    │
+#  │     go test -v     │    lazygit     │
 #  └────────────────────┴────────────────┘
 #
 build_shell() {
@@ -255,6 +255,7 @@ build_shell() {
   tmux select-pane  -t "$SESSION:shell.bottom-left"  -T "test"
   tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
   tmux send-keys    -t "$SESSION:shell.bottom-left"  'go test -v ./...' Enter
+  tmux send-keys    -t "$SESSION:shell.bottom-right" 'command -v lazygit &>/dev/null && lazygit' Enter
 
   # Focus top pane (main shell for go build/run)
   tmux select-pane  -t "$SESSION:shell.top"
