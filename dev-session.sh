@@ -241,24 +241,25 @@ build_opencode() {
 
 # ── Window: Shell / go commands ───────────────────────────────────────────────
 #
-#  ┌─────────────────────────────────────┐
-#  │         go build / test / run       │
-#  └────────────────────┬────────────────┘
-#  │     go test -v     │    lazygit     │
-#  └────────────────────┴────────────────┘
+#  ┌──────────────────┬──────────────────┐
+#  │  go build / run  │                  │
+#  ├──────────────────┤     lazygit      │
+#  │   go test -v     │   (full height)  │
+#  └──────────────────┴──────────────────┘
 #
 build_shell() {
-  tmux split-window -v -l 35% -t "$SESSION:shell" -c "$ROOT"
-  tmux split-window -h         -t "$SESSION:shell.bottom" -c "$ROOT"
+  local main git test
+  main=$(tmux list-panes -t "$SESSION:shell" -F '#{pane_id}' | head -1)
+  git=$(tmux split-window  -h -l 50% -t "$main" -c "$ROOT" -P -F '#{pane_id}')
+  test=$(tmux split-window -v -l 35% -t "$main" -c "$ROOT" -P -F '#{pane_id}')
 
-  # Label bottom panes and launch test runner
-  tmux select-pane  -t "$SESSION:shell.bottom-left"  -T "test"
-  tmux select-pane  -t "$SESSION:shell.bottom-right" -T "git"
-  tmux send-keys    -t "$SESSION:shell.bottom-left"  'go test -v ./...' Enter
-  tmux send-keys    -t "$SESSION:shell.bottom-right" 'command -v lazygit &>/dev/null && lazygit' Enter
+  tmux select-pane -t "$test" -T "test"
+  tmux select-pane -t "$git"  -T "git"
+  tmux send-keys   -t "$test" 'go test -v ./...' Enter
+  tmux send-keys   -t "$git"  'command -v lazygit &>/dev/null && lazygit' Enter
 
-  # Focus top pane (main shell for go build/run)
-  tmux select-pane  -t "$SESSION:shell.top"
+  # Focus main pane (shell for go build/run)
+  tmux select-pane -t "$main"
 }
 
 # ── Window: Debug ─────────────────────────────────────────────────────────────
