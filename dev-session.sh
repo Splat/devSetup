@@ -117,6 +117,7 @@ case "${1:-}" in
     ;;
 esac
 
+IDLE_SECS="${DEV_SESSION_IDLE_SECS:-20}"   # seconds of silence before an agent window is flagged
 REFRESH=0
 if [ "${1:-}" = "--refresh" ]; then
   REFRESH=1
@@ -302,6 +303,12 @@ for win in editor claude copilot opencode shell debug; do
   new_win "$win"
   "build_$win"
   PREV="$win"
+done
+
+# Flag agent windows in the status bar once they go quiet (finished or waiting on you).
+# Applied to existing windows too, so --refresh enables it on running sessions.
+for win in claude copilot opencode; do
+  window_exists "$win" && tmux set-option -w -t "$SESSION:$win" monitor-silence "$IDLE_SECS"
 done
 
 # ── Land on editor, pane 1 (fresh sessions only) ──────────────────────────────
