@@ -159,6 +159,16 @@ tmux kill-session -t dev && dev-session
 
 The session is named `dev`. If it already exists the script just attaches — safe to run repeatedly.
 
+### Parallel agent tasks
+
+```bash
+dev-session --task fix-login              # worktree .worktrees/fix-login + window t-fix-login running claude
+dev-session --task fix-login opencode     # or copilot / opencode
+dev-session --task-done fix-login         # remove worktree and window (refuses if uncommitted changes)
+```
+
+Each task window is the agent (left) plus a shell (right) inside its own git worktree on branch `task/<name>`, based on the branch you ran the command from. Task windows sit after `debug` and get the idle indicator. Review and push the branch from lazygit or a shell, then run `--task-done`.
+
 ## Session persistence
 
 `tmux-continuum` saves session state every 5 minutes and restores it automatically when the tmux server starts. After a reboot:

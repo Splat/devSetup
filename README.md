@@ -5,6 +5,7 @@ A one-command bootstrap for a Go-focused terminal development environment, built
 **What it provides**
 - **Environment bootstrap and updates:** `install.sh` installs Homebrew, git, Go, tmux, lf, lazygit, Node, the AI assistants (Claude Code, GitHub Copilot CLI, Codex, opencode), Go tooling (`gopls`, `dlv`), vim-plug and TPM, and links the configs in this repo into place. It is safe to re-run, and `--upgrade` brings installed tools up to date.
 - **Windowed tmux sessions:** `dev-session` creates a consistent six-window layout per project: editor with file explorer, Claude Code, GitHub Copilot CLI, opencode, a shell with Go test and lazygit panes, and a debugger (delve).
+- **Parallel agent tasks:** `dev-session --task <name> [claude|copilot|opencode]` gives an agent its own git worktree and tmux window so several can work at once without colliding; `--task-done` cleans up. Task tabs get an idle indicator when the agent goes quiet.
 - **Session state management:** sessions persist, so you can detach and come back with everything as you left it. Re-running `dev-session` attaches to an existing session instead of creating a duplicate. Sessions can be listed, switched between, and killed individually or all at once.
 
 **Why use it**
@@ -64,10 +65,15 @@ Session management:
 dev-session                 # create/attach "dev-<current folder name>"
 dev-session myproj          # create/attach "dev-myproj"
 dev-session --refresh       # add missing windows to a running session (keeps existing ones)
+dev-session --task fix-login            # new git worktree + window running claude
+dev-session --task fix-login opencode   # ...or copilot / opencode
+dev-session --task-done fix-login       # remove the worktree and window (branch kept)
 dev-session --list          # list tmux sessions
 dev-session --kill myproj   # kill "dev-myproj" (no name = current folder's session)
 dev-session --kill-all      # kill "dev" and all "dev-*" sessions
 ```
+
+**Parallel agent tasks:** run `dev-session --task <name> [claude|copilot|opencode]` from any pane (the `shell` tab works well) while the session is running. It creates `.worktrees/<name>` on a new branch `task/<name>` based on the branch you are on, and adds a `t-<name>` window with the agent on the left and a shell on the right. Each task has its own copy of the files, so several agents can work at once without touching each other or your main checkout. The tab gets the same idle indicator as the other agents. Re-running `--task` for an existing task selects its window (or reopens it and resumes the agent). `--task-done <name>` removes the worktree and window, refusing if it has uncommitted changes; the `task/<name>` branch stays so you can push it and open a PR. `.worktrees/` is added to the repo's `.git/info/exclude` automatically. Worktrees don't include untracked files such as `.env`, and parallel tasks share ports and local databases.
 
 ---
 
