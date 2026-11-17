@@ -64,10 +64,15 @@ Session management:
 dev-session                 # create/attach "dev-<current folder name>"
 dev-session myproj          # create/attach "dev-myproj"
 dev-session --refresh       # add missing windows to a running session (keeps existing ones)
+dev-session --task fix-login            # new git worktree + window running claude
+dev-session --task fix-login opencode   # ...or copilot / opencode
+dev-session --task-done fix-login       # remove the worktree and window (branch kept)
 dev-session --list          # list tmux sessions
 dev-session --kill myproj   # kill "dev-myproj" (no name = current folder's session)
 dev-session --kill-all      # kill "dev" and all "dev-*" sessions
 ```
+
+**Parallel agent tasks:** run `dev-session --task <name> [claude|copilot|opencode]` from any pane (the `shell` tab works well) while the session is running. It creates `.worktrees/<name>` on a new branch `task/<name>` based on the branch you are on, and adds a `t-<name>` window with the agent on the left and a shell on the right. Each task has its own copy of the files, so several agents can work at once without touching each other or your main checkout. The tab gets the same idle indicator as the other agents. Re-running `--task` for an existing task selects its window (or reopens it and resumes the agent). `--task-done <name>` removes the worktree and window, refusing if it has uncommitted changes; the `task/<name>` branch stays so you can push it and open a PR. `.worktrees/` is added to the repo's `.git/info/exclude` automatically. Worktrees don't include untracked files such as `.env`, and parallel tasks share ports and local databases.
 
 ---
 

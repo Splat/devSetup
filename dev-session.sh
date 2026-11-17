@@ -8,6 +8,8 @@
 #   ./dev-session.sh --kill [session-name]
 #   ./dev-session.sh --kill-all
 #   ./dev-session.sh --refresh [session-name] [project-root]
+#   ./dev-session.sh --task <name> [claude|copilot|opencode]
+#   ./dev-session.sh --task-done <name>
 #   ./dev-session.sh --help
 #
 # If a session already exists, attaches to it.
@@ -27,6 +29,12 @@ Options:
   --kill-all          Kill all dev sessions ("dev" and "dev-*")
   --refresh [name]    Add any missing layout windows to a running session
                       without touching existing windows or processes
+  --task <name> [agent]
+                      Create a git worktree (.worktrees/<name>, branch task/<name>,
+                      based on the current branch) and open a window for it in the
+                      running session with an agent: claude (default), copilot, opencode
+  --task-done <name>  Remove that worktree and window (refuses if it has uncommitted
+                      changes; the branch is kept)
   --help              Show this help message
 
 Arguments:
@@ -45,6 +53,9 @@ Examples:
   dev-session.sh --kill                    # Kills the current folder's session
   dev-session.sh --kill-all                # Kills "dev" and every "dev-*" session
   dev-session.sh --refresh                 # Adds missing windows (e.g. opencode) to the running session
+  dev-session.sh --task fix-login          # New worktree + window running claude
+  dev-session.sh --task fix-login opencode # Same, with opencode
+  dev-session.sh --task-done fix-login     # Remove the worktree and window
   dev-session.sh --help                    # Shows this help
 
 EOF
@@ -97,6 +108,114 @@ kill_all_sessions() {
   [ "$found" -eq 1 ] || echo "No dev sessions to kill."
 }
 
+# ── Task worktrees ────────────────────────────────────────────────────────────
+# Sets REPO_ROOT, GIT_COMMON and TASK_SESSION for --task / --task-done.
+task_context() {
+  GIT_COMMON="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || {
+    echo "Error: not inside a git repository." >&2
+    exit 1
+  }
+  REPO_ROOT="$(dirname "$GIT_COMMON")"
+  if [ -n "${TMUX:-}" ]; then
+    TASK_SESSION="$(tmux display-message -p -t "${TMUX_PANE:-}" '#{session_name}')"
+  else
+    TASK_SESSION="$(resolve_session "$(dir_session_name "$REPO_ROOT")")"
+  fi
+  if ! tmux has-session -t "=$TASK_SESSION" 2>/dev/null; then
+    echo "Error: session '$TASK_SESSION' is not running. Start it with dev-session first." >&2
+    exit 1
+  fi
+}
+
+check_task_name() {
+  if [[ ! "${1:-}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+    echo "Error: task name must be letters, digits, '.', '_' or '-' (got '${1:-}')." >&2
+    exit 1
+  fi
+}
+
+# tmux treats '.' and ':' specially in targets
+task_window_name() { echo "t-${1//[.:]/_}"; }
+
+task_window_id() {
+  tmux list-windows -t "=$TASK_SESSION" -F '#{window_id} #{window_name}' |
+    awk -v n="$1" '$2 == n { print $1; exit }'
+}
+
+start_task() {
+  local name="${1:-}" agent="${2:-claude}"
+  check_task_name "$name"
+  case "$agent" in
+    claude|copilot|opencode) ;;
+    *) echo "Error: agent must be claude, copilot or opencode (got '$agent')." >&2; exit 1 ;;
+  esac
+  task_context
+
+  local wt="$REPO_ROOT/.worktrees/$name" branch="task/$name" win existing=0 wid
+  win="$(task_window_name "$name")"
+
+  wid="$(task_window_id "$win")"
+  if [ -n "$wid" ]; then
+    tmux select-window -t "$wid"
+    echo "Task '$name' already has a window; selected it."
+    return
+  fi
+
+  if [ -d "$wt" ]; then
+    existing=1
+  else
+    mkdir -p "$REPO_ROOT/.worktrees" "$GIT_COMMON/info"
+    grep -qxF '.worktrees/' "$GIT_COMMON/info/exclude" 2>/dev/null ||
+      echo '.worktrees/' >> "$GIT_COMMON/info/exclude"
+    if git show-ref --verify --quiet "refs/heads/$branch"; then
+      git worktree add "$wt" "$branch"
+    else
+      git worktree add -b "$branch" "$wt" HEAD
+    fi
+  fi
+
+  # A fresh worktree has no conversation to resume
+  local cmd="$agent"
+  [ "$existing" -eq 1 ] && cmd="$agent --continue"
+  [ "$existing" -eq 1 ] && [ "$agent" != "opencode" ] && cmd="$agent --continue || $agent"
+
+  local agent_pane shell_pane
+  agent_pane="$(tmux new-window -d -P -F '#{pane_id}' -t "=$TASK_SESSION:" -n "$win" -c "$wt")"
+  shell_pane="$(tmux split-window -h -l 30% -P -F '#{pane_id}' -t "$agent_pane" -c "$wt")"
+  tmux select-pane -t "$agent_pane" -T "$agent"
+  tmux select-pane -t "$shell_pane" -T "shell"
+  tmux select-pane -t "$agent_pane"
+  tmux set-option -w -t "$agent_pane" monitor-silence "$IDLE_SECS"
+  tmux send-keys -t "$agent_pane" "$cmd" Enter
+
+  echo "Task '$name': worktree $wt (branch $branch), window '$win' running $agent."
+}
+
+finish_task() {
+  local name="${1:-}"
+  check_task_name "$name"
+  task_context
+
+  local wt="$REPO_ROOT/.worktrees/$name" wid
+  if [ ! -d "$wt" ]; then
+    echo "Error: no worktree at $wt." >&2
+    exit 1
+  fi
+  if [ -n "$(git -C "$wt" status --porcelain)" ]; then
+    echo "Error: '$name' has uncommitted changes. Commit or discard them first." >&2
+    exit 1
+  fi
+
+  git worktree remove "$wt"
+  echo "Removed worktree $wt. Branch task/$name was kept."
+
+  # Last: this may be the window the command is running in
+  wid="$(task_window_id "$(task_window_name "$name")")"
+  [ -z "$wid" ] || tmux kill-window -t "$wid"
+}
+
+IDLE_SECS="${DEV_SESSION_IDLE_SECS:-20}"   # seconds of silence before an agent window is flagged
+
 # ── Parse arguments ───────────────────────────────────────────────────────────
 case "${1:-}" in
   --help)
@@ -115,9 +234,16 @@ case "${1:-}" in
     kill_all_sessions
     exit 0
     ;;
+  --task)
+    start_task "${2:-}" "${3:-claude}"
+    exit 0
+    ;;
+  --task-done)
+    finish_task "${2:-}"
+    exit 0
+    ;;
 esac
 
-IDLE_SECS="${DEV_SESSION_IDLE_SECS:-20}"   # seconds of silence before an agent window is flagged
 REFRESH=0
 if [ "${1:-}" = "--refresh" ]; then
   REFRESH=1
