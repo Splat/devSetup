@@ -199,6 +199,8 @@ What follows is a list of key bindings. The prefix key is `Ctrl-a` (set in `.tmu
 
 Windows are numbered from 1. Jump directly by number or cycle with next/prev. The status bar at the bottom also accepts mouse clicks (`mouse on` is set).
 
+**Idle indicator:** the `claude`, `copilot` and `opencode` tabs turn yellow with a `●` after 20 seconds without output, meaning the agent has finished or is waiting on you. The flag clears when you visit the tab. Change the delay by setting `DEV_SESSION_IDLE_SECS` before running `dev-session` (`dev-session --refresh` applies it to a running session). It is based on silence, so a long quiet tool call can trigger it too.
+
 | Keys | Action |
 |------|--------|
 | `prefix + n` | Next window |
