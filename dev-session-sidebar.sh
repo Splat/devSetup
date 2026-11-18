@@ -130,8 +130,8 @@ while true; do
       $'\e')
         IFS= read -rsn2 -t 1 rest || rest=""
         case "$rest" in
-          '[A') action=up ;;
-          '[B') action=down ;;
+          '[A'|'OA') action=up ;;
+          '[B'|'OB') action=down ;;
         esac
         ;;
     esac
