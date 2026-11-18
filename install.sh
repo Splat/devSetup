@@ -155,6 +155,14 @@ else
   skip "dev-session"
 fi
 
+if [[ ! -f "$HOME/bin/dev-session-sidebar" ]] || ! diff -q "$REPO_DIR/dev-session-sidebar.sh" "$HOME/bin/dev-session-sidebar" &>/dev/null; then
+  cp "$REPO_DIR/dev-session-sidebar.sh" "$HOME/bin/dev-session-sidebar"
+  chmod +x "$HOME/bin/dev-session-sidebar"
+  success "dev-session-sidebar installed to ~/bin"
+else
+  skip "dev-session-sidebar"
+fi
+
 # ── Vim plugins (headless) ────────────────────────────────────────────────────
 # PlugInstall/PlugUpdate also runs vim-go's GoUpdateBinaries hook.
 if [[ $UPGRADE -eq 1 ]]; then PLUG_CMD="PlugUpdate"; else PLUG_CMD="PlugInstall"; fi

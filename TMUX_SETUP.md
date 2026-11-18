@@ -42,7 +42,18 @@ Window 6 — debug
 ├─────────────────────────┬────────────────┤
 │   program output        │   logs / watch │
 └─────────────────────────┴────────────────┘
+
+Window 7 — ai (experimental)
+┌──────────┬───────────────────────────────┐
+│ AI tasks │                               │
+│ ▸ alpha  │   shell (placeholder)         │
+│   ● work │                               │
+│   beta   │                               │
+│   ◐ idle │                               │
+└──────────┴───────────────────────────────┘
 ```
+
+The `ai` window's left sidebar lists the worktree tasks created by `dev-session --task` with their agent, state (`● working`, `◐ idle`, `○ stopped`) and a `*` when the worktree has uncommitted changes. Use `j`/`k` or the arrow keys to move and Enter to jump to that task's window; `r` refreshes. Press `n` to create a task (it asks for a name, then an agent: `c`laude by default, `p` copilot, `o` opencode), or `d` to end the selected task after a `y` confirmation (it refuses if the worktree has uncommitted changes, like `--task-done`). Key hints are shown at the bottom of the sidebar. Typing only echoes in those prompts. The sidebar is `dev-session-sidebar`, installed to `~/bin` by `install.sh`.
 
 ## First-time machine setup
 
