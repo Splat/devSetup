@@ -411,6 +411,34 @@ build_debug() {
   tmux select-pane  -t "$SESSION:debug.top"
 }
 
+# ── Window: AI (task sidebar) ─────────────────────────────────────────────────
+#
+#  ┌────────┬────────────────────────────┐
+#  │ tasks  │                            │
+#  │ (list  │   shell (placeholder for   │
+#  │  of    │   the selected agent)      │
+#  │ worktrees)                          │
+#  └────────┴────────────────────────────┘
+#
+build_ai() {
+  local sidebar here
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for sidebar in "$here/dev-session-sidebar" "$here/dev-session-sidebar.sh" "$(command -v dev-session-sidebar 2>/dev/null)"; do
+    [ -n "$sidebar" ] && [ -x "$sidebar" ] && break
+    sidebar=""
+  done
+  if [ -z "$sidebar" ]; then
+    echo "dev-session-sidebar not found; ai window left as a plain shell (run install.sh)." >&2
+    return 0
+  fi
+
+  local pane
+  pane="$(tmux split-window -h -b -l 28 -P -F '#{pane_id}' -t "$SESSION:ai" -c "$ROOT")"
+  tmux select-pane -t "$pane" -T "tasks"
+  tmux send-keys -t "$pane" "$(printf '%q %q %q' "$sidebar" "$SESSION" "$ROOT")" Enter
+  tmux select-pane -t "$SESSION:ai.right"
+}
+
 # ── Create the session (or, with --refresh, only the missing windows) ─────────
 if [ "$SESSION_EXISTS" -eq 0 ]; then
   tmux new-session -d -s "$SESSION" -n "editor" -c "$ROOT"
@@ -420,7 +448,7 @@ else
   echo "Refreshing session '$SESSION' — existing windows are left untouched."
 fi
 
-for win in editor claude copilot opencode shell debug; do
+for win in editor claude copilot opencode shell debug ai; do
   if window_exists "$win"; then
     PREV="$win"
     continue
