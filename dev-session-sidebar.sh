@@ -8,7 +8,7 @@
 # with their agent and state, and creates/ends them by calling `dev-session`.
 #
 #   j / k, arrows   move selection
-#   Enter           jump to the selected task's window
+#   Enter           show the selected task's agent in the right pane
 #   n               new task (asks for a name, then an agent)
 #   d               end the selected task (asks to confirm)
 #   r               refresh now
@@ -38,6 +38,7 @@ sel=0
 last_frame=""
 MSG=""
 LAST_RC=0
+SHOWN=""; SHOWN_PANE=""; PLACEHOLDER=""
 NAMES=(); LINES2=()
 
 cleanup() { printf '\e[?25h'; }
@@ -65,6 +66,10 @@ collect() {
 
     act="$(printf '%s\n' "$wins" | awk -v n="$win" '$1 == n { print $2; exit }')"
     agent="$(printf '%s\n' "$panes" | awk -v n="$win" '$1 == n { print $2; exit }')"
+    if [ -n "$SHOWN_PANE" ] && [ "$name" = "$SHOWN" ]; then
+      act="$(printf '%s\n' "$wins" | awk '$1 == "ai" { print $2; exit }')"
+      agent="$(tmux display-message -p -t "$SHOWN_PANE" '#{pane_title}' 2>/dev/null)"
+    fi
     case "$agent" in GitHub*) agent=copilot ;; esac
     if [ -z "$act" ]; then
       state="${DIM}○ stopped${RESET}"
@@ -141,13 +146,46 @@ run_dev_session() {
   MSG="$(printf '%s\n' "$out" | grep -v '^$' | tail -1)"
 }
 
+# The agent shown in the right slot lives in the ai window; its home window
+# holds the placeholder shell meanwhile. Swapping back restores both.
+unshow() {
+  if [ -n "$SHOWN_PANE" ]; then
+    tmux swap-pane -d -s "$SHOWN_PANE" -t "$PLACEHOLDER" 2>/dev/null || true
+  fi
+  SHOWN=""; SHOWN_PANE=""
+}
+
+show_task() {
+  local n="$1" win agent_pane
+  win="t-${n//[.:]/_}"
+  if [ "$n" = "$SHOWN" ] && [ -n "$SHOWN_PANE" ]; then
+    tmux select-pane -t "$SHOWN_PANE" 2>/dev/null || true
+    return 0
+  fi
+  agent_pane="$(tmux list-panes -t "=$SESSION:$win" -F '#{pane_id}' 2>/dev/null | head -1)"
+  if [ -z "$agent_pane" ]; then
+    MSG="$n is stopped (no window)"
+    return 0
+  fi
+  if [ -z "$PLACEHOLDER" ]; then
+    PLACEHOLDER="$(tmux list-panes -t "=$SESSION:ai" -F '#{pane_id}' 2>/dev/null | grep -vx "${TMUX_PANE:-}" | head -1)"
+    [ -n "$PLACEHOLDER" ] || { MSG="no right pane to swap into"; return 0; }
+  fi
+  unshow
+  tmux swap-pane -d -s "$agent_pane" -t "$PLACEHOLDER" && SHOWN="$n" && SHOWN_PANE="$agent_pane"
+  tmux select-pane -t "$agent_pane" 2>/dev/null || true
+}
+
 new_task() {
   local name agent
   prompt "task name: "; name="$REPLY"
   [ -n "$name" ] || return 0
-  prompt "agent (c/p/o, ⏎=claude): "; case "${REPLY:-c}" in
-    c*) agent=claude ;; p*|g*) agent=copilot ;; o*) agent=opencode ;;
-    *) MSG="unknown agent '$REPLY'"; return 0 ;;
+  prompt "agent (c/p/o, ⏎=claude): "
+  case "${REPLY:-claude}" in
+    c|claude) agent=claude ;;
+    p|g|copilot) agent=copilot ;;
+    o|opencode) agent=opencode ;;
+    *) MSG="unknown agent '$REPLY' (use c, p or o)"; return 0 ;;
   esac
   MSG="creating $name..."; last_frame=""; build_frame; draw
   run_dev_session --task "$name" "$agent"
@@ -159,7 +197,8 @@ end_task() {
   local n="${NAMES[$sel]}"
   prompt "end $n? [y/N] "
   case "$REPLY" in
-    y|Y|yes) run_dev_session --task-done "$n"; [ "$LAST_RC" -ne 0 ] || MSG="ended $n" ;;
+    y|Y|yes) [ "$n" != "$SHOWN" ] || unshow
+             run_dev_session --task-done "$n"; [ "$LAST_RC" -ne 0 ] || MSG="ended $n" ;;
     *) MSG="" ;;
   esac
 }
@@ -197,7 +236,7 @@ while true; do
       enter)
         if [ "${#NAMES[@]}" -gt 0 ]; then
           n="${NAMES[$sel]}"
-          tmux select-window -t "=$SESSION:t-${n//[.:]/_}" 2>/dev/null || true
+          show_task "$n"
         fi
         ;;
     esac
